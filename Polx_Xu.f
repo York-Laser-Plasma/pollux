@@ -120,7 +120,10 @@ C     CLOSE(2)
         call output
         stop
       endif
-      if (mod(n,10) .eq. 0) call rgeout
+      if (mod(n,10) .eq. 0) then
+         call rgeout
+         call numpy_out
+      end if
       IF (TIME.LT.TOTIME) GO TO 1
       END
       SUBROUTINE INPUT
@@ -477,6 +480,28 @@ c   write u and v to fort.13
 
       enddo outerloop
       end subroutine rgeout
+
+      subroutine numpy_out
+      use m_npy, only: add_npz
+      include 'polx.i'
+      COMMON /DENS/ RHO(nnz,nnr), RHO1(nnz,nnr)
+      COMMON /CELL/ JTM1, JT, JT1, IT, IT1, IT2, KN, KN1
+      COMMON /TEMP/ TI(nnz,nnr), TE(nnz,nnr)
+      common /vel/  u(nnz,nnr), u1(nnz,nnr), v(nnz,nnr), v1(nnz,nnr)
+      COMMON /TIM/ totime,tout,totout,dt,time,n
+      COMMON /BKABS/ REF,ROCRIT
+
+      character(len=21) :: filename
+      write(filename, '(a, "_", g10.4, ".npz")') "pollux", time
+      write(*, *) "Writing ", filename
+
+      call add_npz(filename, "rho", rho)
+      call add_npz(filename, "Te", Te)
+      call add_npz(filename, "Ti", Ti)
+      call add_npz(filename, "u", u)
+      call add_npz(filename, "v", v)
+
+      end subroutine numpy_out
 C
       SUBROUTINE PCONT(X,IDIM,IT,JT,HEIGHT,NC)
       include 'polx.i'

@@ -418,29 +418,36 @@ C
       write(11, '(1pe10.3, i5, i5)') time, it2-1, jt1
       write(12, '(1pe10.3, i5, i5)') time, it2-1, jt1
       write(13, '(1pe10.3, i5, i5)') time, it2-1, jt1
-      DO 10 I=1,80
-   10 CODE(I) = 'Z'
-      DO 100 I=2,IT2
+
+      CODE(:) = 'Z'
+
+      outerloop: DO I=2,IT2
+
 c   write Rho to fort.11
-      DO 90  J=1,JT1
+      rholoop: DO J=1,JT1
       K = 50 + (10.0*ALOG10(RHO(I,J) + 1.0e-12))
       IF (K.GT.52)K=52
       IF (K.LT.1) K=1
       code(j)=cc(k)
+
 c  mark rocrit on the laser side only
       if (rho(i,j).ge.rocrit .and. rho(i+1,j).lt.rocrit) code(j)='z'
-   90 continue
+
+      end do rholoop
+
       WRITE(11,6000)(code(j), j=1, jt1)
+
 c   write Te to fort.12
-      DO 95 J=1,JT1
+      teloop: DO J=1,JT1
       K = (15.0*ALOG10(TE(I,J)+0.1)) - 75
       IF (K.GT.52) K=52
       IF (K.LT.1 ) K=1
       CODE(J) = CC(K)
-   95 CONTINUE
+      end do teloop
+
       WRITE(12,6000)(code(j), j=1, jt1)
 c   write u and v to fort.13
-      do 97 j=1, jt1
+      uloop: do j=1, jt1
       k = 5.0 * alog10(amax1(abs(u(i,j)), 1.0e4)) - 20.0
       if (u(i,j) > 0.0) then
         k = 26 + k
@@ -450,9 +457,10 @@ c   write u and v to fort.13
       if (k .gt. 52) k = 52
       if (k .lt.  1) k = 1
       code(j) = cc(k)
-   97 continue
+      enddo uloop
+
       write(13, 6000) (code(j), j=1, jt1)
-      do 98 j=1, jt1
+      vloop: do j=1, jt1
       k = 5.0 * alog10(amax1(abs(v(i,j)), 1.0e4)) - 20.0
       if (v(i,j) > 0.0) then
         k = 26 + k
@@ -462,12 +470,13 @@ c   write u and v to fort.13
       if (k .gt. 52) k = 52
       if (k .lt.  1) k = 1
       code(j) = cc(k)
-   98 continue
+      enddo vloop
+
       write(13, 6000) (code(j), j=1, jt1)
  6000 FORMAT(1X,300A1)
-  100 CONTINUE
-      RETURN
-      END
+
+      enddo outerloop
+      end subroutine rgeout
 C
       SUBROUTINE PCONT(X,IDIM,IT,JT,HEIGHT,NC)
       include 'polx.i'
